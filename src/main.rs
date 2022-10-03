@@ -1,8 +1,8 @@
-use std::io::{self,Read,stdin};
-use std::fs::File;
-use sha2::{Sha256,Digest};
-use generic_array::{GenericArray,ArrayLength};
+use generic_array::{ArrayLength, GenericArray};
 use hex;
+use sha2::{Digest, Sha256};
+use std::fs::File;
+use std::io::{self, stdin, Read};
 
 const BUF_SIZE: usize = 1024;
 
@@ -14,7 +14,7 @@ fn main() {
                 .long("check")
                 .short('c')
                 .help("read SHA256 sums from the FILEs and check them")
-                .action(clap::ArgAction::SetTrue)
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(clap::arg!([FILE] ... "files to parse, or use stdin if none").trailing_var_arg(true));
 
@@ -22,7 +22,7 @@ fn main() {
 
     let check = match matches.get_one::<bool>("check") {
         Some(t) => *t,
-        None => false
+        None => false,
     };
 
     if !check {
@@ -30,8 +30,8 @@ fn main() {
     }
 }
 
-fn compute_hashes(matches : clap::ArgMatches) -> Result<(), io::Error>{
-    let files : Vec<_>= matches.get_many::<String>("FILE").unwrap().collect();
+fn compute_hashes(matches: clap::ArgMatches) -> Result<(), io::Error> {
+    let files: Vec<_> = matches.get_many::<String>("FILE").unwrap().collect();
     let mut files_specified = false;
     for f in files {
         if f == "-" {
@@ -48,17 +48,22 @@ fn compute_hashes(matches : clap::ArgMatches) -> Result<(), io::Error>{
     return Result::Ok(());
 }
 
-fn emit_row<S : ArrayLength<u8>>(filename : &String, bs : &GenericArray<u8, S>) -> Result<(), io::Error> {
-    println!("{}\t{}", hex::encode(bs),filename);
-    return Ok(())
+fn emit_row<S: ArrayLength<u8>>(
+    filename: &String,
+    bs: &GenericArray<u8, S>,
+) -> Result<(), io::Error> {
+    println!("{}\t{}", hex::encode(bs), filename);
+    return Ok(());
 }
 
-fn compute_file_hash<H : Digest>(path : &str) -> Result<GenericArray<u8, H::OutputSize>, io::Error>{
+fn compute_file_hash<H: Digest>(path: &str) -> Result<GenericArray<u8, H::OutputSize>, io::Error> {
     let file = File::open(path)?; // closed automatically when it goes out of scope
-    return compute_hash::<H,File>(file);
+    return compute_hash::<H, File>(file);
 }
 
-fn compute_hash<H : Digest, R: Read>(mut reader : R) -> Result<GenericArray<u8, H::OutputSize>, io::Error>{
+fn compute_hash<H: Digest, R: Read>(
+    mut reader: R,
+) -> Result<GenericArray<u8, H::OutputSize>, io::Error> {
     let mut buf = [0; BUF_SIZE];
     let mut hash = H::new();
     loop {
@@ -68,6 +73,5 @@ fn compute_hash<H : Digest, R: Read>(mut reader : R) -> Result<GenericArray<u8, 
         }
         hash.update(&buf[..cnt]);
     }
-    return Result::Ok(hash.finalize())
+    return Result::Ok(hash.finalize());
 }
-
